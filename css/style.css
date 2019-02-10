@@ -1,0 +1,17 @@
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+.container{
+  height: 100%;
+  position: relative;
+}
+#map{
+  bottom:0px;
+  left: 0px;
+  right: 0px;
+  height: 100%;
+  position: absolute;
+}
