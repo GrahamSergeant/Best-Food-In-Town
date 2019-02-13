@@ -7,33 +7,90 @@ function initMap(){
   //ko.applyBindings(myViewModel);
   const myLatLng = {lat: 40.758895, lng: -73.9873197};
   let map = new google.maps.Map(document.getElementById('map'), {
-      zoom: 12,
+      zoom: 15,
       center: myLatLng,
       mapTypeControl: false,
       styles: mapStyle()
   });
   toggleSplash();
-  centreMapOnUserLocation(map);
+  let location = centreMapOnUserLocation(map);
 }
 
 function centreMapOnUserLocation(map){
   if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function (position) {
-      myLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-      map.setCenter(myLocation);
-      //
-      let userMarker = new google.maps.Marker({
-        map: map,
-        icon: 'img/user_map_pin.png',
-        title: 'Your Location',
-        position: myLocation,
-        animation: google.maps.Animation.BOUNCE
+    let geolocationPromise = new Promise(function(resolve, reject) {
+      navigator.geolocation.getCurrentPosition(function (position) {
+        let myLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        map.setCenter(myLocation);
+        //
+        let userMarker = new google.maps.Marker({
+          map: map,
+          icon: 'img/user_map_pin.png',
+          title: 'Your Location',
+          position: myLocation,
+          animation: google.maps.Animation.BOUNCE
+        });
+        //
+        resolve(myLocation);
+        reject(status);
+        setTimeout(function() { markerBounceToggle(userMarker) },3000);
+        toggleSplash();
       });
-      //
-      setTimeout(function() { markerBounceToggle(userMarker) },3000)
-      toggleSplash();
     });
- }
+    geolocationPromise.then(function(myLocation){
+      placesSearch(map,myLocation);
+    }).catch(function(status){
+      alert(status);
+    });
+  }
+}
+
+function placesSearch(map,location){
+  let request = {
+    location: location,
+    radius: '1000',
+    type: ['restaurant']
+  }
+  placesServiceCall = new google.maps.places.PlacesService(map);
+  placesServiceCall.nearbySearch(request,placesSearchResults);
+  function placesSearchResults(results,status){
+    if(status==='OK'){
+      let sortedResults = sortResults(results);
+      addMarkers(sortedResults,map)
+    } else alert('Search Result: '+status+' ...hit refresh to try again');
+  }
+}
+
+function sortResults(results){
+  //add first result into sorted array to compare against
+  let sortedArray =[results[0]];
+  //compare each results rating against sortedArray rating
+  for(let i = 1; i < results.length;i++){
+    for(let j = 0; j < sortedArray.length;j++){
+      //if rating is more than or equal to rating, splice into array at that position
+      if (results[i].rating >= sortedArray[j].rating){
+        sortedArray.splice(j,0,results[i]);
+        break;
+        //else, push to end if not more than or equal to any rating tested
+      } else if (j === sortedArray.length - 1){
+          sortedArray.push(results[i]);
+          break;
+        }
+    }
+  }
+  return(sortedArray);
+}
+
+function addMarkers(results,map){
+  for (i = 0; i < results.length; i++){
+    let marker = new google.maps.Marker({
+      map: map,
+      icon: 'img/bfit_map_pin.png',
+      title: results[i].name,
+      position: results[i].geometry.location,
+      id: results[i].place_id
+    });
+  }
 }
 
 function markerBounceToggle(marker){
