@@ -8,10 +8,29 @@ html, body {
   height: 100%;
   position: relative;
 }
+#splash{
+  margin:auto;
+  top: 0%;
+  left: 25%;
+  height: 100%;
+  position: absolute;
+  z-index: 1;
+}
 #map{
   bottom:0px;
   left: 0px;
   right: 0px;
   height: 100%;
   position: absolute;
+  z-index: 0;
+}
+.hidden{
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s 2s, opacity 2s linear;
+}
+.visible{
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 4s linear;
 }
