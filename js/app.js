@@ -48,7 +48,7 @@ function centreMapOnUserLocation(map){
 function placesSearch(map,location){
   let request = {
     location: location,
-    radius: '1000',
+    radius: '5000',
     type: ['restaurant']
   }
   placesServiceCall = new google.maps.places.PlacesService(map);
@@ -56,7 +56,9 @@ function placesSearch(map,location){
   function placesSearchResults(results,status){
     if(status==='OK'){
       let sortedResults = sortResults(results);
-      addMarkers(sortedResults,map)
+      //addMarkers(sortedResults,map)
+      addMarkers([sortedResults[0]],map)
+      displayRoute(location,sortedResults[0].geometry.location,map)
     } else alert('Search Result: '+status+' ...hit refresh to try again');
   }
 }
@@ -91,6 +93,28 @@ function addMarkers(results,map){
       id: results[i].place_id
     });
   }
+}
+
+function displayRoute(origin,destination,map) {
+  let directionsServiceCall = new google.maps.DirectionsService;
+  directionsServiceCall.route({
+    origin: origin,
+    destination: destination,
+    travelMode: 'WALKING',
+  }, function(response, status) {
+        if (status === google.maps.DirectionsStatus.OK) {
+          let directionsDisplay = new google.maps.DirectionsRenderer({
+              map: map,
+              directions: response,
+              draggable: true,
+              polylineOptions: {strokeColor: 'red'},
+              preserveViewport: true,
+              markerOptions: {visible:false}
+          });
+        } else {
+            window.alert('Directions request failed due to ' + status);
+          }
+      });
 }
 
 function markerBounceToggle(marker){
