@@ -1,71 +1,95 @@
-let myViewModel = {
-  
+//next TODO
+//have route update on list selects
+//add unit type to query radius
+//add infowindows on restaurants
+//
+let ViewModel = function() {
+  //
+  this.radius = ko.observable();
+  this.orderedList = ko.observableArray([]);
+  this.showSplash = ko.observable(true);
+  this.radiusUpdate = function(e){
+    mapUpdate();
+  };
+  //
+  let self = this;
+  let map;
+  let markers = [];
+  let location = {lat: 40.758895, lng: -73.9873197};
+  //initial map set up - called once
+  function mapInit(){
+    map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 14,
+      center: location,
+      mapTypeControl: false,
+      styles: mapStyle()
+    });
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function (position) {
+        location = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        self.showSplash(false);
+        addUserMarker(map,location);
+        map.setCenter(location);
+        self.radius(1000);
+        mapUpdate(self.radius());
+      });
+    } else (alert(error +'Current location not found, refresh to try again'));
+  }
+  //updatable map API calls - called once by mapInit, then repeatedly by UI inputs
+  function mapUpdate(){
+    placesSearch(map,location,self.radius()).then(function(results){
+      self.orderedList([]);
+      sortResults(results).forEach(function(result){
+        self.orderedList.push(result);
+    });
+    if (markers[0]){
+      clearMarkers(markers);
+    }
+    markers = addPlaceMarkers(self.orderedList(),map);
+    displayRoute(self.orderedList()[0].geometry.location,map,location);
+    }).catch(function(error) {
+        alert(error +'No places found, try expanding query radius');
+      });
+  }
+  mapInit();
 };
 
 
-function initMap(){
-  //ko.applyBindings(myViewModel);
-  const myLatLng = {lat: 40.758895, lng: -73.9873197};
-  let map = new google.maps.Map(document.getElementById('map'), {
-      zoom: 15,
-      center: myLatLng,
-      mapTypeControl: false,
-      styles: mapStyle()
+function init(){
+  ko.applyBindings(new ViewModel());
+}
+
+function addUserMarker(map,location){
+    let userMarker = new google.maps.Marker({
+      map: map,
+      icon: 'img/user_map_pin.png',
+      title: 'Your Location',
+      position: location,
+      animation: google.maps.Animation.BOUNCE
+    });
+    setTimeout(function(){markerBounceToggle(userMarker)},3000);
+}
+  
+function placesSearch(map,location,radius){
+  return new Promise(function(resolve,reject){
+    let request = {
+      location: location,
+      radius: radius,
+      type: ['restaurant']
+    };
+    placesServiceCall = new google.maps.places.PlacesService(map);
+    placesServiceCall.nearbySearch(request,placesSearchResults);
+    function placesSearchResults(results,status){
+      if(status==='OK'){
+        resolve(results);
+      } else alert('Search Result: '+status+' try increasing query radius');
+    }
   });
-  toggleSplash();
-  let location = centreMapOnUserLocation(map);
-}
-
-function centreMapOnUserLocation(map){
-  if (navigator.geolocation) {
-    let geolocationPromise = new Promise(function(resolve, reject) {
-      navigator.geolocation.getCurrentPosition(function (position) {
-        let myLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-        map.setCenter(myLocation);
-        //
-        let userMarker = new google.maps.Marker({
-          map: map,
-          icon: 'img/user_map_pin.png',
-          title: 'Your Location',
-          position: myLocation,
-          animation: google.maps.Animation.BOUNCE
-        });
-        //
-        resolve(myLocation);
-        reject(status);
-        setTimeout(function() { markerBounceToggle(userMarker) },3000);
-        toggleSplash();
-      });
-    });
-    geolocationPromise.then(function(myLocation){
-      placesSearch(map,myLocation);
-    }).catch(function(status){
-      alert(status);
-    });
-  }
-}
-
-function placesSearch(map,location){
-  let request = {
-    location: location,
-    radius: '5000',
-    type: ['restaurant']
-  }
-  placesServiceCall = new google.maps.places.PlacesService(map);
-  placesServiceCall.nearbySearch(request,placesSearchResults);
-  function placesSearchResults(results,status){
-    if(status==='OK'){
-      let sortedResults = sortResults(results);
-      //addMarkers(sortedResults,map)
-      addMarkers([sortedResults[0]],map)
-      displayRoute(location,sortedResults[0].geometry.location,map)
-    } else alert('Search Result: '+status+' ...hit refresh to try again');
-  }
 }
 
 function sortResults(results){
   //add first result into sorted array to compare against
-  let sortedArray =[results[0]];
+  let sortedArray = [results[0]];
   //compare each results rating against sortedArray rating
   for(let i = 1; i < results.length;i++){
     for(let j = 0; j < sortedArray.length;j++){
@@ -83,7 +107,8 @@ function sortResults(results){
   return(sortedArray);
 }
 
-function addMarkers(results,map){
+function addPlaceMarkers(results,map){
+  let markers = [];
   for (i = 0; i < results.length; i++){
     let marker = new google.maps.Marker({
       map: map,
@@ -92,13 +117,21 @@ function addMarkers(results,map){
       position: results[i].geometry.location,
       id: results[i].place_id
     });
+    markers.push(marker);
+  }
+  return markers;
+}
+
+function clearMarkers(markers){
+  for (let i = 0; i < markers.length; i++) {
+    markers[i].setMap(null);
   }
 }
 
-function displayRoute(origin,destination,map) {
+function displayRoute(destination,map,location) {
   let directionsServiceCall = new google.maps.DirectionsService;
   directionsServiceCall.route({
-    origin: origin,
+    origin: location,
     destination: destination,
     travelMode: 'WALKING',
   }, function(response, status) {
@@ -108,7 +141,7 @@ function displayRoute(origin,destination,map) {
               directions: response,
               draggable: true,
               polylineOptions: {strokeColor: 'red'},
-              preserveViewport: true,
+              preserveViewport: false,
               markerOptions: {visible:false}
           });
         } else {
@@ -123,11 +156,5 @@ function markerBounceToggle(marker){
   } else {
       marker.setAnimation(google.maps.Animation.BOUNCE);
     }
-}
-
-function toggleSplash(){
-  if(document.getElementById('splash').className != 'hidden'){
-    document.getElementById('splash').className = 'hidden';
-    } else document.getElementById('splash').className = 'visible';
 }
 

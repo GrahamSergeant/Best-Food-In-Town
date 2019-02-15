@@ -24,7 +24,7 @@ function mapStyle(){
         "elementType": "geometry",
         "stylers": [
             {
-                "color": "#2D333C"
+                "color": "#000000"
             }
         ]
     }
