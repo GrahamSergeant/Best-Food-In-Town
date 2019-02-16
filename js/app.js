@@ -1,35 +1,52 @@
 //next TODO
-//have route update on list selects
-//add unit type to query radius
-//add infowindows on restaurants
+//style infowindows
+//bind marker select to list select
 //add warning for invalid query radius
 //add UI to specify travel mode
-//
+//test responsive scaling
+
 let ViewModel = function() {
   //
   let self = this;
+  let location = {lat: 40.758895, lng: -73.9873197}; //NYC for splash screen
   let map;
   let markers = [];
-  let location = {lat: 40.758895, lng: -73.9873197};
+  let userMarker;
   let route;
+  let selectedRestaurant;
+  let restaurantMarker;
   //
   this.radius = ko.observable();
-  this.orderedList = ko.observableArray([]);
-  this.showSplash = ko.observable(true);
+  this.orderedList = ko.observableArray ([]);
+  this.showSplash = ko.observable (true);
   this.toggleUI = ko.observable(false);
   //perform a new place search with new radius input
   this.radiusUpdate = function(){
     mapUpdate();
   };
   //draw route to selected restaurant
-  this.selectedRestaurant = function(restaurant) {
-    if (route){
-      route.setMap(null);
+  this.restaurantSelected = function(restaurant) {
+    //prevent selection of same resturant again
+    if (restaurant != selectedRestaurant){
+      selectedRestaurant = restaurant;
+      //remove route from last selection
+      if (route){
+        route.setMap(null);
+        markerBounceToggle(restaurantMarker);
+      }
+      //return promise from directions service API for new route
+      displayRoute(restaurant.geometry.location,map,location).then(function(result){
+        route = result;
+        //find selected restaurant marker and toggle bounce
+        restaurantMarker = markers.find(function(marker){
+          if(marker.title === restaurant.name){
+            return (marker);
+          }
+        });
+        markerBounceToggle(restaurantMarker);
+      });
     }
-    displayRoute(restaurant.geometry.location,map,location).then(function(result){
-      route = result
-    });
-  }
+  };
   //initial map set up - called once
   function mapInit(){
     map = new google.maps.Map(document.getElementById('map'), {
@@ -43,7 +60,7 @@ let ViewModel = function() {
         location = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
         self.showSplash(false);
         self.toggleUI(true);
-        addUserMarker(map,location);
+        userMarker = addUserMarker(map,location);
         map.setCenter(location);
         self.radius(1000);
         mapUpdate(self.radius());
@@ -74,17 +91,6 @@ let ViewModel = function() {
 
 function init(){
   ko.applyBindings(new ViewModel());
-}
-
-function addUserMarker(map,location){
-    let userMarker = new google.maps.Marker({
-      map: map,
-      icon: 'img/user_map_pin.png',
-      title: 'Your Location',
-      position: location,
-      animation: google.maps.Animation.BOUNCE
-    });
-    setTimeout(function(){markerBounceToggle(userMarker)},3000);
 }
   
 function placesSearch(map,location,radius){
@@ -124,6 +130,17 @@ function sortResults(results){
   return(sortedArray);
 }
 
+function addUserMarker(map,location){
+    let userMarker = new google.maps.Marker({
+      map: map,
+      icon: 'img/user_map_pin.png',
+      title: 'Your Location',
+      position: location,
+      animation: google.maps.Animation.BOUNCE
+    });
+    return (userMarker);
+}
+
 function addPlaceMarkers(results,map){
   let markers = [];
   for (i = 0; i < results.length; i++){
@@ -136,7 +153,56 @@ function addPlaceMarkers(results,map){
     });
     markers.push(marker);
   }
-  return markers;
+  //add infowindows on click events for each marker
+  markers.forEach(function(marker){
+    let placeInfoWindow = new google.maps.InfoWindow();
+    marker.addListener('click', function() {
+      if (placeInfoWindow.marker != this) {
+        openInfoWindow(this, placeInfoWindow, map);
+      }
+    });
+  });
+  return (markers);
+}
+
+
+function openInfoWindow(marker, infowindow, map) {
+  let service = new google.maps.places.PlacesService(map);
+  service.getDetails({
+    placeId: marker.id
+  }, function(place, status) {
+    if (status === google.maps.places.PlacesServiceStatus.OK) {
+      infowindow.marker = marker;
+      let innerHTML = '<div>';
+      if (place.name) {
+        innerHTML += '<strong>' + place.name + '</strong>';
+      }
+      if (place.formatted_address) {
+        innerHTML += '<br>' + place.formatted_address;
+      }
+      if (place.formatted_phone_number) {
+        innerHTML += '<br>' + place.formatted_phone_number;
+      }
+      if (place.rating) {
+        innerHTML += '<br>' + '<strong>Average Rating: </strong>' + place.rating;
+      }
+      if (place.reviews) {
+        place.reviews.forEach(function(review){
+          innerHTML += '<br>' + '<strong>Customer Reviews: </strong>' + '<br>' + '<strong>' + review.author_name + '. Rating: ' + review.rating + '</strong>' + ' ' + review.text;
+        })
+      }
+      if (place.photos) {
+        innerHTML += '<br><br><img src="' + place.photos[0].getUrl({maxHeight: 100, maxWidth: 200}) + '">';
+      }
+      innerHTML += '</div>';
+      infowindow.setContent(innerHTML);
+      infowindow.open(map, marker);
+      // Make sure the marker property is cleared if the infowindow is closed.
+      infowindow.addListener('closeclick', function() {
+        infowindow.marker = null;
+      });
+    }
+  });
 }
 
 function clearMarkers(markers){
@@ -171,7 +237,7 @@ function displayRoute(destination,map,location) {
 }
 
 function markerBounceToggle(marker){
-  if (marker.getAnimation() !== null) {
+  if (marker.getAnimation()) {
     marker.setAnimation(null);
   } else {
       marker.setAnimation(google.maps.Animation.BOUNCE);
