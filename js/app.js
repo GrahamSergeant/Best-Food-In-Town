@@ -2,20 +2,34 @@
 //have route update on list selects
 //add unit type to query radius
 //add infowindows on restaurants
+//add warning for invalid query radius
+//add UI to specify travel mode
 //
 let ViewModel = function() {
-  //
-  this.radius = ko.observable();
-  this.orderedList = ko.observableArray([]);
-  this.showSplash = ko.observable(true);
-  this.radiusUpdate = function(e){
-    mapUpdate();
-  };
   //
   let self = this;
   let map;
   let markers = [];
   let location = {lat: 40.758895, lng: -73.9873197};
+  let route;
+  //
+  this.radius = ko.observable();
+  this.orderedList = ko.observableArray([]);
+  this.showSplash = ko.observable(true);
+  this.toggleUI = ko.observable(false);
+  //perform a new place search with new radius input
+  this.radiusUpdate = function(){
+    mapUpdate();
+  };
+  //draw route to selected restaurant
+  this.selectedRestaurant = function(restaurant) {
+    if (route){
+      route.setMap(null);
+    }
+    displayRoute(restaurant.geometry.location,map,location).then(function(result){
+      route = result
+    });
+  }
   //initial map set up - called once
   function mapInit(){
     map = new google.maps.Map(document.getElementById('map'), {
@@ -28,6 +42,7 @@ let ViewModel = function() {
       navigator.geolocation.getCurrentPosition(function (position) {
         location = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
         self.showSplash(false);
+        self.toggleUI(true);
         addUserMarker(map,location);
         map.setCenter(location);
         self.radius(1000);
@@ -42,11 +57,13 @@ let ViewModel = function() {
       sortResults(results).forEach(function(result){
         self.orderedList.push(result);
     });
+    if (route){
+      route.setMap(null);
+    }
     if (markers[0]){
       clearMarkers(markers);
     }
     markers = addPlaceMarkers(self.orderedList(),map);
-    displayRoute(self.orderedList()[0].geometry.location,map,location);
     }).catch(function(error) {
         alert(error +'No places found, try expanding query radius');
       });
@@ -129,12 +146,13 @@ function clearMarkers(markers){
 }
 
 function displayRoute(destination,map,location) {
-  let directionsServiceCall = new google.maps.DirectionsService;
-  directionsServiceCall.route({
-    origin: location,
-    destination: destination,
-    travelMode: 'WALKING',
-  }, function(response, status) {
+  return new Promise(function(resolve,reject){
+    let directionsServiceCall = new google.maps.DirectionsService();
+    directionsServiceCall.route({
+      origin: location,
+      destination: destination,
+      travelMode: 'WALKING',
+    }, function(response, status) {
         if (status === google.maps.DirectionsStatus.OK) {
           let directionsDisplay = new google.maps.DirectionsRenderer({
               map: map,
@@ -144,10 +162,12 @@ function displayRoute(destination,map,location) {
               preserveViewport: false,
               markerOptions: {visible:false}
           });
+          resolve(directionsDisplay);
         } else {
             window.alert('Directions request failed due to ' + status);
           }
       });
+  })
 }
 
 function markerBounceToggle(marker){

@@ -7,11 +7,13 @@
 <body>
   <div class="container">
     <img src="img/bfit_splash.png" id="splash" data-bind="visible: showSplash">
-    <form id="ui" data-bind="submit: radiusUpdate">
+    <form id="ui" data-bind="submit: radiusUpdate, visible: toggleUI">
       <label for="radiusInput">Query Radius</label>
       <input id="radiusInput" data-bind="value: radius">
-      <ol id="list" data-bind="foreach:orderedList">
-        <li><span data-bind="text: $data.name"></span><span>,   </span><span data-bind="text: $data.rating"></span><span>*</span></li>
+      <label for="radiusInput">m</label>
+      <br><br>
+      <ol id="list" data-bind="foreach: orderedList">
+        <li data-bind = "click: $parent.selectedRestaurant"><span data-bind="text: $data.name"></span><span>,   </span><span data-bind="text: $data.rating"></span><span>*</span></li>
       </ol>
     </form>
     <div id="map"></div>
