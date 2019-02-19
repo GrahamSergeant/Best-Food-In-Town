@@ -1,5 +1,4 @@
 //next TODO
-//make foursquare api keys secret
 //sort alphabetised list by rating button
 //food type filter
 //display menu
