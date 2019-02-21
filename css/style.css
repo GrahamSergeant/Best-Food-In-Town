@@ -83,3 +83,25 @@ select{
   left: 40%;
   position: absolute;
 }
+
+#menu,a{
+  font-size: 11px;
+  color: white;
+  z-index: 3;
+  left: 80%;
+  position: absolute;
+}
+
+#price{
+  font-size: 11px;
+  color: white;
+  z-index: 3;
+  left: 90%;
+  position: absolute;
+}
+
+#photobox{
+  z-index: 3;
+  left: 20%;
+  position: absolute;
+}

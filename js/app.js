@@ -11,24 +11,29 @@ let ViewModel = function() {
   this.placeList = ko.observableArray ([]);
   //declare restaurant array, ko bound to restaurant list element in html
   this.categoryList = ko.observableArray (['All']);
+  //when category is selected - check which venues are included in the categories array[object] and filter placeList ko array
+  this.selectedCategory = ko.observable();
+  //update data elements for selected venue:
+  this.photoURL = ko.observable();
+  this.menuURL = ko.observable();
+  this.venuePrice = ko.observable();
   //data collection - pushed out to various map api calls and updated on return
   let map;
   let markers = [];
   let categories = [];
   let filteredCategories = [];
   //keep a master reference to the placelist so when we take out of the places array, we can put back when category is selected
-  //
-  let apiResponseArray = [];
+  let apiResponsePlacesArray = [];
   //pull initial restaurant data from prepared object in place_data.js
   places().forEach(function(restaurant){
       //call foursquare api with restaurant name
       fakeFoursquareRestaurantQuery(restaurant.name).then(function(response){
           //keep a single reference to each api call, for rebuilding list and markers after filtering
-          apiResponseArray.push(response);
+          apiResponsePlacesArray.push(response);
           //push each restaurant entry in places object to ko bound list element and Foursquare api
           self.placeList.push(response);
           //push venue data to marker, then infowindow
-          markers.push(addPlaceMarker(response, map));
+          markers.push(addPlaceMarker(response, map, false));
           //get categories for restaurant-category-filter element
           response.categories.forEach(function(category){
             //populate array of category objects, linking categories to restaurants
@@ -52,8 +57,7 @@ let ViewModel = function() {
           });
       });
   });
-  //when category is selected - check which venues are included in the categories array[object] and filter placeList ko array
-  this.selectedCategory = ko.observable();
+  
   //subscribe to category list selection change
   this.selectedCategory.subscribe(function(category) {
     //empty the place list, so it can be rebuilt with places in the selected category
@@ -68,38 +72,57 @@ let ViewModel = function() {
         restaurants = categoryObj.restaurants;
         //loop through each associated restaurant and match it to a restaurant in the placelist
         restaurants.forEach(function(restaurant){
-              apiResponseArray.forEach(function(place){
+              apiResponsePlacesArray.forEach(function(place){
                 if(place.name === restaurant){
-                  console.log(place.name,restaurant)
                   self.placeList.push(place);
-                  markers.push(addPlaceMarker(place, map));
+                  markers.push(addPlaceMarker(place, map, true));
                 }
               });
         });
       }
     });
     if (category[0] === 'All'){
-      apiResponseArray.forEach(function(place){
+      apiResponsePlacesArray.forEach(function(place){
             self.placeList.push(place);
-            markers.push(addPlaceMarker(place, map));
+            markers.push(addPlaceMarker(place, map, false));
       });
     }
+    self.selected('clearSelection')
   });
-  
-  //
+  //sort by foursquare place rating(high to low) both ko bound places array and master places array from api calls
   this.sortListByRating = function(){
     let sortedList = sortList(self.placeList());
     self.placeList.removeAll();
-    masterPlaceList = [];
+    apiResponsePlacesArray = [];
     sortedList.forEach(function(place){
       self.placeList.push(place);
-      masterPlaceList.push(place);
+      apiResponsePlacesArray.push(place);
     });
   };
-    
-  //bounce marker of selected restaurant in list
-  this.bounceRestaurantMarker = function(selectedRestaurant) {
-      //find selected restaurant marker and toggle bounce
+  //actions to perform with API data when restaurant is selected from list
+  this.selected = function(selectedRestaurant) {
+      apiResponsePlacesArray.forEach(function(place){
+        if (place.name === selectedRestaurant.name){
+          console.log(place);
+          //Photo
+          if (place.photos){
+            let photoPrefix = place.photos.groups[1].items[0].prefix
+            let photoSuffix = place.photos.groups[1].items[0].suffix
+            let photoURL = photoPrefix + '200x200' + photoSuffix;
+            console.log(photoURL);
+            self.photoURL('<img src="' + photoURL + '">');
+          }
+          //Menu
+          if (place.menu){
+            self.menuURL("<a href=" + place.menu.url + ">Click to see menu on Foursquare</a>");
+          } else self.menuURL("<p>menu not available</p>");
+          //Price
+          if(place.price){
+            self.venuePrice('Price Guide: ' + place.price.message)
+          }
+        }
+      });
+      //Marker
       markers.find(function(marker){
         if(marker.title === selectedRestaurant.name){
           //single timed bounce of marker
@@ -107,6 +130,11 @@ let ViewModel = function() {
           setTimeout(markerBounceToggle(marker),2000);
         }
       });
+      if (selectedRestaurant === 'clearSelection'){
+        self.photoURL('<div></div>');
+        self.menuURL('<div></div>');
+        self.venuePrice('<div></div>');
+      }
   };
   //initial map set up - called once
   function mapInit(){
@@ -146,9 +174,6 @@ function fakeFoursquareRestaurantQuery(query){
   if(query === 'Damascena'){
     uri = 'https://api.myjson.com/bins/1dajm2';
   }
-  if(query === 'The Jack Rabbit'){
-    uri = 'https://api.myjson.com/bins/18cyv6';
-  }
   return new Promise(function(resolve,reject){
       fetch(uri).then(function(result) {
         (result.json()).then(function(jsonResult){
@@ -185,13 +210,21 @@ function foursquareRestaurantQuery(query){
   });
 }
 
-function addPlaceMarker(venue, map){
+function addPlaceMarker(venue, map, category){
   let lat = venue.location.lat;
   let lng = venue.location.lng;
   let location = {lat,lng};
+  let icon = 'img/bfit_map_pin.png';
+  if(category){
+    if (venue.categories[0].icon){
+      let iconPrefix = venue.categories[0].icon.prefix;
+      let iconSuffix = venue.categories[0].icon.suffix;
+      icon = iconPrefix + '64' + iconSuffix; //use bg_ for grey background eg 'bg_32'
+    }
+  }
   let marker = new google.maps.Marker({
       map: map,
-      icon: 'img/bfit_map_pin.png',
+      icon: icon,
       title: venue.name,
       animation: google.maps.Animation.DROP,
       position: location,

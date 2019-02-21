@@ -9,12 +9,15 @@
     <img src="img/bfit_splash.png" id="splash" data-bind="visible: showSplash">
     <form id="ui">
       <ol id="list" data-bind="foreach: placeList">
-        <li data-bind = "click: $parent.bounceRestaurantMarker"><span data-bind="text: $data.name"></span><span>,   </span><span data-bind="text: $data.rating"></span><span>/10</span></li>
+        <li data-bind = "click: $parent.selected"><span data-bind="text: $data.name"></span><span>,   </span><span data-bind="text: $data.rating"></span><span>/10</span></li>
       </ol>
       <button type="button" data-bind="click: sortListByRating" >Order List By Rating</button>
       <select data-bind="options: categoryList, selectedOptions: selectedCategory">
       </select>
     </form>
+    <div id="menu" data-bind="html: menuURL"></div>
+    <div id="price" data-bind="text: venuePrice"></div>
+    <div id="photobox" data-bind="html: photoURL"></div>
     <div id="map"></div>
   </div>
     <script type="text/javascript" src="lib/knockout.js"> </script>
