@@ -70,6 +70,7 @@ let ViewModel = function() {
         restaurants.forEach(function(restaurant){
               apiResponseArray.forEach(function(place){
                 if(place.name === restaurant){
+                  console.log(place.name,restaurant)
                   self.placeList.push(place);
                   markers.push(addPlaceMarker(place, map));
                 }
@@ -80,7 +81,6 @@ let ViewModel = function() {
     if (category[0] === 'All'){
       apiResponseArray.forEach(function(place){
             self.placeList.push(place);
-            
             markers.push(addPlaceMarker(place, map));
       });
     }
