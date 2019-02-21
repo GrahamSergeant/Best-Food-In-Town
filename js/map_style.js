@@ -1,3 +1,4 @@
+//for a dark monochrome/grey map
 function mapStyle(){
   return ([
     {

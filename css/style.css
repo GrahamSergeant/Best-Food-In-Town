@@ -69,7 +69,17 @@ input{
   width: 50px;
 }
 
-
 label,li{
   color: white;
+}
+
+button{
+  z-index: 3;
+  position: absolute;
+}
+
+select{
+  z-index: 3;
+  left: 40%;
+  position: absolute;
 }

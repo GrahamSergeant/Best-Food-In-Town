@@ -1,17 +1,4 @@
-//next TODO
-//sort alphabetised list by rating button
-//food type filter
-//display menu
-//search foursquare queries for even more data to display
-//put tip/username/photo on one line
-//test responsive scaling - make flexbox
-//add powered by Googlemaps and Foursquare badges
-//double marker size
-//centre map bounds on selected restaurant
-//write readme file
-
-
-//Foursquare API keys
+//get Foursquare API keys from config.js file
 const CLIENT_ID = config.CLIENT_ID;
 const CLIENT_SECRET = config.CLIENT_SECRET;
 //ko bound viewmodel - called in init() function
@@ -22,25 +9,100 @@ let ViewModel = function() {
   this.showSplash = ko.observable (true);
   //declare restaurant array, ko bound to restaurant list element in html
   this.placeList = ko.observableArray ([]);
+  //declare restaurant array, ko bound to restaurant list element in html
+  this.categoryList = ko.observableArray (['All']);
   //data collection - pushed out to various map api calls and updated on return
   let map;
   let markers = [];
-  //pull initial restaurant data from prepared object in place_data.js
-  //push each restaurant entry in places object to ko bound list element and Foursquare api
-  places().forEach(function(restaurant){
-        fakeFoursquareQuery(restaurant.name).then(function(response){
-          markers.push(addPlaceMarker(response, map));
-          restaurant.rating = response.rating;
-          self.placeList.push(restaurant);
-        });
-    });
-      
+  let categories = [];
+  let filteredCategories = [];
+  //keep a master reference to the placelist so when we take out of the places array, we can put back when category is selected
   //
-  //bounce marker of selected restaurant
-  this.bounceRestaurantMarker = function(restaurant) {
+  let apiResponseArray = [];
+  //pull initial restaurant data from prepared object in place_data.js
+  places().forEach(function(restaurant){
+      //call foursquare api with restaurant name
+      fakeFoursquareRestaurantQuery(restaurant.name).then(function(response){
+          //keep a single reference to each api call, for rebuilding list and markers after filtering
+          apiResponseArray.push(response);
+          //push each restaurant entry in places object to ko bound list element and Foursquare api
+          self.placeList.push(response);
+          //push venue data to marker, then infowindow
+          markers.push(addPlaceMarker(response, map));
+          //get categories for restaurant-category-filter element
+          response.categories.forEach(function(category){
+            //populate array of category objects, linking categories to restaurants
+            categories.push({
+                              category: category.name,
+                              restaurants: [response.name]
+                            });
+            //populate filtered array with single instances of categories, to prevent duplicate <option>s
+            if(!filteredCategories.includes(category.name)){
+              filteredCategories.push(category.name);
+              //also push category to ko bound array if not a duplicate
+              self.categoryList.push(category.name);
+            } else {
+                //capture index of duplicate category so we can delete it and capture associated restaurant index and move it into a single category
+                let index = filteredCategories.findIndex(function(category){
+                  return category === categories[filteredCategories.length].category;
+                });
+                categories[index].restaurants.push(categories[filteredCategories.length].restaurants[0]);
+                categories.splice(filteredCategories.length,1);
+              }
+          });
+      });
+  });
+  //when category is selected - check which venues are included in the categories array[object] and filter placeList ko array
+  this.selectedCategory = ko.observable();
+  //subscribe to category list selection change
+  this.selectedCategory.subscribe(function(category) {
+    //empty the place list, so it can be rebuilt with places in the selected category
+    self.placeList.removeAll();
+    //filter markers with place filter
+    clearMarkers(markers);
+    //look for selected category in array of category objects, keyed to restaurant values
+    let restaurants;
+    categories.forEach(function(categoryObj){
+      //if selected category matches category object, store the array of associated restaurants
+      if (categoryObj.category === category[0]){
+        restaurants = categoryObj.restaurants;
+        //loop through each associated restaurant and match it to a restaurant in the placelist
+        restaurants.forEach(function(restaurant){
+              apiResponseArray.forEach(function(place){
+                if(place.name === restaurant){
+                  self.placeList.push(place);
+                  markers.push(addPlaceMarker(place, map));
+                }
+              });
+        });
+      }
+    });
+    if (category[0] === 'All'){
+      apiResponseArray.forEach(function(place){
+            self.placeList.push(place);
+            
+            markers.push(addPlaceMarker(place, map));
+      });
+    }
+  });
+  
+  //
+  this.sortListByRating = function(){
+    let sortedList = sortList(self.placeList());
+    self.placeList.removeAll();
+    masterPlaceList = [];
+    sortedList.forEach(function(place){
+      self.placeList.push(place);
+      masterPlaceList.push(place);
+    });
+  };
+    
+  //bounce marker of selected restaurant in list
+  this.bounceRestaurantMarker = function(selectedRestaurant) {
       //find selected restaurant marker and toggle bounce
       markers.find(function(marker){
-        if(marker.title === restaurant.name){
+        if(marker.title === selectedRestaurant.name){
+          //single timed bounce of marker
           markerBounceToggle(marker);
           setTimeout(markerBounceToggle(marker),2000);
         }
@@ -55,11 +117,10 @@ let ViewModel = function() {
       styles: mapStyle()
     });
   }
-  //remove splash screen
-  setTimeout(function(){self.showSplash(false);},1500);
   //initialise map
   mapInit();
-  //
+  //remove splash screen
+  setTimeout(function(){self.showSplash(false);},1500);
 };
 
 //google map API callback/loaded in html file
@@ -68,7 +129,7 @@ function init(){
 }
 
 //spoof api call with prepared json data
-function fakeFoursquareQuery(query){
+function fakeFoursquareRestaurantQuery(query){
   let uri;
   if(query === 'Digbeth Dining Club'){
     uri = 'https://api.myjson.com/bins/yckbu';
@@ -85,6 +146,9 @@ function fakeFoursquareQuery(query){
   if(query === 'Damascena'){
     uri = 'https://api.myjson.com/bins/1dajm2';
   }
+  if(query === 'The Jack Rabbit'){
+    uri = 'https://api.myjson.com/bins/18cyv6';
+  }
   return new Promise(function(resolve,reject){
       fetch(uri).then(function(result) {
         (result.json()).then(function(jsonResult){
@@ -97,9 +161,9 @@ function fakeFoursquareQuery(query){
 }
 
 //genuine api call to foursquare - query argument is restaurant name
-function foursquareQuery(query){
+function foursquareRestaurantQuery(query){
   return new Promise(function(resolve,reject){
-    //initial, shallow foursquare place search to get venue id from name and birmingham lat/lng area query
+    //initial, shallow foursquare place search to get venue id from supplied name and birmingham lat/lng area query
     fetch(`https://api.foursquare.com/v2/venues/explore?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&v=20180323&ll=52.4813098,-1.9156044&query=${query}`)
       .then(function(result) {
         (result.json()).then(function(jsonResult){
@@ -129,6 +193,7 @@ function addPlaceMarker(venue, map){
       map: map,
       icon: 'img/bfit_map_pin.png',
       title: venue.name,
+      animation: google.maps.Animation.DROP,
       position: location,
     });
   let placeInfoWindow = new google.maps.InfoWindow();
@@ -184,6 +249,13 @@ function markerBounceToggle(marker){
     }
 }
 
+function clearMarkers(markers){
+  for (let i = 0; i < markers.length; i++) {
+    markers[i].setMap(null);
+  }
+}
+
+//expects an array of arrays for the list argument
 function sortList(list){
   //add first result into sorted array to compare against
   let sortedList = [list[0]];
@@ -203,118 +275,3 @@ function sortList(list){
   }
   return(sortedList);
 }
-
-
-
-/*
-
-//bounce marker of selected restaurant
-  this.bounceRestaurantMarker = function(restaurant) {
-    //prevent selection of same resturant again
-    if (restaurant != selectedRestaurant){
-      selectedRestaurant = restaurant;
-      find selected restaurant marker and toggle bounce
-      markers.find(function(marker){
-        if(marker.title === restaurant.name){
-          markerBounceToggle(marker);
-          setTimeout(markerBounceToggle(marker),2000);
-        }
-      });
-    }
-  };
-
-function getPlaceID(map,location,query){
-  return new Promise(function(resolve,reject){
-    let request = {
-      locationBias: location,
-      query: query,
-      fields: ['place_id']
-    };
-    placesServiceCall = new google.maps.places.PlacesService(map);
-    placesServiceCall.findPlaceFromQuery(request,placesSearchResults);
-    function placesSearchResults(results,status){
-      if(status==='OK'){
-        resolve(results);
-      } else alert('Google Place Query has failed: '+status);
-    }
-  });
-}
-
-function addPlaceMarkers(places,map){
-  let markers = [];
-  places.forEach(function(place){
-    let lat = place.lat;
-    let lng = place.lng;
-    let location = {lat,lng};
-    getPlaceID(map,location,place.name).then(function(response){
-        let id = response[0].place_id;
-        let marker = new google.maps.Marker({
-          map: map,
-          icon: 'img/bfit_map_pin.png',
-          title: place.name,
-          position: location,
-          id: id
-        });
-        markers.push(marker);
-        let placeInfoWindow = new google.maps.InfoWindow();
-        marker.addListener('click', function() {
-          if (placeInfoWindow.marker != this) {
-            openInfoWindow(this, placeInfoWindow, map);
-          }
-        });
-    }).catch(function(error){
-      alert('Google Place Query has failed with error: '+error);
-    });
-    return (markers);
-  });
-}
-
-function openInfoWindow(marker, infowindow, map) {
-  let service = new google.maps.places.PlacesService(map);
-  service.getDetails({
-    placeId: marker.id
-  }, function(place, status) {
-    if (status === google.maps.places.PlacesServiceStatus.OK) {
-      infowindow.marker = marker;
-      let innerHTML = '<div id=' + 'infowindow_container'+ '>' +
-                          '<div id='+'infowindow'+'>';
-      if (place.name) {
-        innerHTML += '<strong>' + place.name + '</strong>';
-      }
-      if (place.formatted_address) {
-        innerHTML += '<br>' + place.formatted_address;
-      }
-      if (place.formatted_phone_number) {
-        innerHTML += '<br>' + place.formatted_phone_number;
-      }
-      if (place.rating) {
-        innerHTML += '<br>' + '<strong>Average Rating: </strong>' + place.rating;
-      }
-      if (place.reviews) {
-        innerHTML += '<br>' + '<strong>Customer Reviews: </strong>';
-        place.reviews.forEach(function(review){
-          innerHTML += '<br>' + '<strong>' + review.author_name + '. Rating: ' + review.rating + '</strong>' + ' ' + review.text;
-        })
-      }
-      if (place.photos) {
-        innerHTML += '<br><br><img src="' + place.photos[0].getUrl({maxHeight: 100, maxWidth: 200}) + '">';
-      }
-      innerHTML += '</div>' + '</div>';
-      //
-      infowindow.setContent(innerHTML);
-      infowindow.open(map, marker);
-      // Make sure the marker property is cleared if the infowindow is closed.
-      infowindow.addListener('closeclick', function() {
-        infowindow.marker = null;
-      });
-    }
-  });
-}
-
-function clearMarkers(markers){
-  for (let i = 0; i < markers.length; i++) {
-    markers[i].setMap(null);
-  }
-}
-*/
-
