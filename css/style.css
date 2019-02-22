@@ -1,9 +1,9 @@
 html, body {
-  height:100%;
-  margin:0;
-  overflow:hidden;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
   font-family: 'Roboto', sans-serif;
-  font-size:2.7vw;
+  font-size: 2.7vw;
 }
 
 #map{
@@ -19,7 +19,7 @@ html, body {
   position: relative;
   width: 33vw;
   min-width: 33vw;
-  height:100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -29,7 +29,7 @@ html, body {
 }
 
 img{
-  width:80%;
+  width: 80%;
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -76,7 +76,7 @@ button, select{
   padding: 5px;
   width: 28vw ;
   max-width: 28vw;
-  margin:5px;
+  margin: 5px;
   max-height: 7vw;
 }
 
@@ -92,7 +92,7 @@ select{
   font-size: 4vw;
   margin-top: 0;
   margin-bottom: 0;
-  padding:0;
+  padding: 0;
 }
 
 #website, select, button{
@@ -112,7 +112,7 @@ a{
   color: white;
   margin-top: 0;
   margin-bottom: 0;
-  padding:0;
+  padding: 0;
 }
 
 
@@ -122,15 +122,15 @@ a{
 }
 
 #photo, figure, figCaption{
-  padding:0;
-  margin:0;
+  padding: 0;
+  margin: 0;
   align-self: center;
 }
 
 figCaption{
   color: white;
-  padding:0;
-  margin:0;
+  padding: 0;
+  margin: 0;
   text-align: center;
 }
 
@@ -140,7 +140,7 @@ figCaption{
   margin-right: auto;
   width: 40vw;
   max-width: 40vw;
-  font-size:2.4vw;
+  font-size: 2.4vw;
   font-family: 'Roboto', sans-serif;
   text-align: center;
   padding: 0;
@@ -167,7 +167,7 @@ and (orientation : landscape) {
   }
   
   img{
-    width:35%;
+    width: 35%;
   }
   
   button, select{
@@ -175,7 +175,7 @@ and (orientation : landscape) {
     padding: 2px;
     width: 28vw ;
     max-width: 28vw;
-    margin:2px;
+    margin: 2px;
     max-height: 2.75vw;
   }
   
@@ -189,7 +189,7 @@ and (orientation : landscape) {
   }
   li{
     min-width: 90%;
-    margin-left:0;
+    margin-left: 0;
   }
 }
 
@@ -206,10 +206,10 @@ and (orientation : landscape) {
   }
   
   img{
-    width:100%;
+    width: 100%;
   }
   #foursquarelogo{
-    width:45%;
+    width: 45%;
   }
   
   #form{
@@ -222,7 +222,7 @@ and (orientation : landscape) {
     padding: 2px;
     width: 20vw ;
     max-width: 20vw;
-    margin:10px;
+    margin: 10px;
     max-height: 2.75vw;
   }
   
@@ -241,7 +241,7 @@ and (orientation : landscape) {
   li{
     font-size: 1vw;
     min-width: 90%;
-    margin-left:0;
+    margin-left: 0;
   }
   figCaption, #menu, #website{
     font-size: 1vw;
@@ -250,7 +250,7 @@ and (orientation : landscape) {
   .gm-style .gm-style-iw {
     width: 25vw;
     max-width: 25vw;
-    font-size:1vw;
+    font-size: 1vw;
 }
 
 .gm-style .gm-style-iw img {
