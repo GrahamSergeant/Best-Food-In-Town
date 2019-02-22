@@ -6,7 +6,7 @@ let ViewModel = function() {
   let self = this;
   //declare restaurant array, ko bound to restaurant list element in html
   this.placeList = ko.observableArray ([]);
-  //declare restaurant array, ko bound to restaurant list element in html
+  //declare category array, ko bound to category option select element in html
   this.categoryList = ko.observableArray (['All']);
   //update data elements for selected venue
   this.selectedCategory = ko.observable();
