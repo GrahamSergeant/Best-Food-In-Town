@@ -26,7 +26,7 @@ let ViewModel = function() {
   //pull initial restaurant data from prepared object in place_data.js
   places().forEach(function(restaurant){
       //call foursquare api with restaurant name
-      fakeFoursquareRestaurantQuery(restaurant.name).then(function(response){
+      foursquareRestaurantQuery(restaurant.name).then(function(response){
           //keep a single reference to each api call, for rebuilding list and markers after filtering
           apiResponsePlacesArray.push(response);
           //push each restaurant entry in places object to ko bound list element and Foursquare api
@@ -103,15 +103,15 @@ let ViewModel = function() {
         if (place.name === selectedRestaurant.name){
           //centre map on selected
           map.panTo({lat:place.location.lat,lng:place.location.lng,});
-          map.panBy(-200,-150);//pan slightly south-east to give room for infowindow/sidebar
+          map.panBy(-50,-150);//pan slightly south-east to give room for infowindow/sidebar
           //Menu
           if (place.menu){
-            self.menuURL('<a href=' + place.menu.url + '>Menu</a>' + '<br><br>');
+            self.menuURL('<a href=' + place.menu.url + '>Menu</a>');
           } else {self.menuURL('');}
           //website
           if (place.url){
-            self.websiteURL('<a href=' + place.url + '>' + place.url + '</a>' + '<br><br>');
-          } else {self.websiteURL('');}
+            self.websiteURL('<a href=' + place.url + '>' + place.url + '</a>');
+          } else {self.websiteURL('');console.log(place.url);}
           //Price
           if(place.price){
             self.venuePrice('Price Guide: ' + place.price.message);
@@ -120,10 +120,9 @@ let ViewModel = function() {
           if (place.photos){
             let photoPrefix = place.photos.groups[1].items[0].prefix;
             let photoSuffix = place.photos.groups[1].items[0].suffix;
-            let photoURL = photoPrefix + '300x300' + photoSuffix;
+            let photoURL = photoPrefix + '200x200' + photoSuffix;
             self.photoURL('<img src="' + photoURL + '">');
             //image attribution
-            
             self.imageAttribution('Photo Credit: ' + place.photos.groups[1].items[0].user.firstName + ' ' + place.photos.groups[1].items[0].user.lastName +", " +  new Date(place.photos.groups[1].items[0].createdAt * 1000).getFullYear());
           }
         }
@@ -143,14 +142,14 @@ let ViewModel = function() {
         self.photoURL('<img src="img/bfit_splash.png">');
         self.menuURL('');
         self.venuePrice('');
-        self.website('');
-        self.selectedRestaurant('<p></p>');
+        self.websiteURL('');
+        self.selectedRestaurant('');
       }
   };
   //initial map set up - called once
   function mapInit(){
     map = new google.maps.Map(document.getElementById('map'), {
-      zoom: 14,
+      zoom: 13,
       center: {lat: 52.4813098, lng: -1.9156044},
       mapTypeControl: false,
       styles: mapStyle()
@@ -163,60 +162,6 @@ let ViewModel = function() {
 //google map API callback/loaded in html file
 function init(){
   ko.applyBindings(new ViewModel());
-}
-
-//spoof api call with prepared json data
-function fakeFoursquareRestaurantQuery(query){
-  let uri;
-  if(query === 'Digbeth Dining Club'){
-    uri = 'https://api.myjson.com/bins/yckbu';
-  }
-  if(query === 'Adams'){
-    uri = 'https://api.myjson.com/bins/6v03m';
-  }
-  if(query === 'The Highfield'){
-    uri = 'https://api.myjson.com/bins/1e8u6i';
-  }
-  if(query === 'Fiesta del Asado'){
-    uri = 'https://api.myjson.com/bins/o3wq2';
-  }
-  if(query === 'Damascena'){
-    uri = 'https://api.myjson.com/bins/1dajm2';
-  }
-  return new Promise(function(resolve,reject){
-      fetch(uri).then(function(result) {
-        (result.json()).then(function(jsonResult){
-          resolve(jsonResult);
-        }).catch(function(error){
-          reject(alert('Failed to fetch and parse JSON data in fake API call' + error));
-        });
-      });
-    });
-}
-
-//genuine api call to foursquare - query argument is restaurant name
-function foursquareRestaurantQuery(query){
-  return new Promise(function(resolve,reject){
-    //initial, shallow foursquare place search to get venue id from supplied name and birmingham lat/lng area query
-    fetch(`https://api.foursquare.com/v2/venues/explore?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&v=20180323&ll=52.4813098,-1.9156044&query=${query}`)
-      .then(function(result) {
-        (result.json()).then(function(jsonResult){
-        //deeper foursquare venue/details search with venue id
-        let VENUE_ID = jsonResult.response.groups[0].items[0].venue.id;
-        fetch(`https://api.foursquare.com/v2/venues/${VENUE_ID}?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&v=20180323`)
-        .then(function(result){
-          (result.json()).then(function(jsonResult){
-              resolve(jsonResult.response.venue);
-          });
-        }).catch(function(error) {
-            alert('FourSquare venue/details serarch failed with error: ' + error);
-          });
-        });
-    })
-    .catch(function(error) {
-      alert('FourSquare venue search failed with error: ' + error);
-    });
-  });
 }
 
 //expects an array of arrays for the list argument
@@ -249,7 +194,7 @@ function addPlaceMarker(venue, map, category){
   if(category){
     if (venue.categories[0].icon){
       map.panTo(location);
-      map.panBy(-200,-150);//pan slightly south-east to give room for infowindow/sidebar
+      map.panBy(-50,-150);//pan slightly south-east to give room for infowindow/sidebar
       let iconPrefix = venue.categories[0].icon.prefix;
       let iconSuffix = venue.categories[0].icon.suffix;
       icon = iconPrefix + '64' + iconSuffix; //use bg_ for grey background eg 'bg_32'
@@ -271,7 +216,7 @@ function addPlaceMarker(venue, map, category){
             markerBounceToggle(marker)
           },2000);
           map.panTo(marker.position);
-          map.panBy(-200,-150); //pan slightly south-east to give room for infowindow/sidebar
+          map.panBy(-50,-150); //pan slightly south-east to give room for infowindow/sidebar
           openInfoWindow(this, placeInfoWindow, venue, map);
     }
   });

@@ -1,86 +1,260 @@
 html, body {
-  font-family: 'Lustria', serif;
-  font-size: 18px;
   height:100%;
   margin:0;
   overflow:hidden;
-}
-
-label{
-  font-weight: bold;
-  font-size: 14px;
-  margin:0;
+  font-family: 'Roboto', sans-serif;
+  font-size:2.7vw;
 }
 
 #map{
-  position:absolute;
+  position: absolute;
   bottom: 0px;
   height: 100%;
   width: 100%;
   z-index: 1;
 }
 
-
 .ui{
-  position:relative;
-  display:flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  flex-basis: auto;
-  flex-grow: 1;
-  align-items: centre;
-  min-width: 16vw;
-  overflow: hidden;
-  width: 22vw;
+  background: rgb(0,0,0,0.5);
+  position: relative;
+  width: 33vw;
+  min-width: 33vw;
   height:100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 1;
   z-index: 3;
-  color: white;
-  background:radial-gradient(circle, rgba(0,0,0,0.2),rgba(0,0,0,0.4),rgba(0,0,0,0.8));
-  padding:20px;
-  
 }
 
 img{
-  width:16vw;
+  width:80%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#listheader{
+  text-align: center;
+  color: white;
 }
 
 #list{
+  color: white;
   cursor: pointer;
   overflow-y: scroll;
-  margin:5px;
+  background: rgb(0,0,0,0.4);
+  max-height: 24vh;
 }
 
-#price, #menu{
-  margin: 4px;
+#form{
+  padding: 0;
+  max-width: 30vw;
+  text-align: center;
+  border: 1px solid white;
+  border-radius: 6px;
+}
+
+li{
+  text-align: right;
+  min-width: 100%;
+  border-bottom: 1px solid white;
+  font-family: 'Cinzel', serif;
+  text-overflow: ellipsis;
+  padding: 5px;
+  margin-left:-2.5em;
+}
+
+button, select{
+  border-radius: 10px;
+  border: 1px solid white;
+  background-color: black;
+  color: white;
+  font-size: 2.7vw;
+  cursor: pointer;
+  padding: 5px;
+  width: 28vw ;
+  max-width: 28vw;
+  margin:5px;
+  max-height: 7vw;
+}
+
+#filterheader{
+  color: white;
+}
+
+select{
+  font-family: 'Cinzel', serif;
+}
+
+#menu{
+  font-size: 4vw;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding:0;
+}
+
+#website, select, button{
+  text-overflow: ellipsis;
 }
 
 #website{
-  font-size: 14px;
-  margin:5px;
-}
-
-#photobox{
-  margin:6px;
-  color: white;
-  text-align: left;
-  font-size: 20px;
-  font-weight: bold;
+  max-width: 30vw;
+  width: 30vw;
 }
 
 a{
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 1.8vw;
   color: white;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding:0;
 }
 
-.gm-style .gm-style-iw {
-  font-family: 'Lustria', serif;
-  font-size: 14px;
+
+#photobox{
+  color: white;
+  font-weight: bold;
+}
+
+#photo, figure, figCaption{
+  padding:0;
+  margin:0;
+  align-self: center;
+}
+
+figCaption{
+  color: white;
+  padding:0;
+  margin:0;
   text-align: center;
 }
 
-.gm-style .gm-style-iw img {
-  margin:0;
-  width:90%;
+.gm-style .gm-style-iw {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 40vw;
+  max-width: 40vw;
+  font-size:2.4vw;
+  font-family: 'Roboto', sans-serif;
+  text-align: center;
+  padding: 0;
 }
-     
-         
-              
+
+.gm-style .gm-style-iw img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 40vw;
+  max-width: 40vw;
+  padding: 0;
+}
+
+/*landscape orientarion mobile*/
+@media only screen
+and (min-device-width : 568px)
+and (max-device-width : 1365px)
+and (orientation : landscape) {
+  .ui{
+    font-size: 1.25vw;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  img{
+    width:35%;
+  }
+  
+  button, select{
+    font-size: 1.3vw;
+    padding: 2px;
+    width: 28vw ;
+    max-width: 28vw;
+    margin:2px;
+    max-height: 2.75vw;
+  }
+  
+  option{
+    font-size: 1.5vw;
+  }
+
+  a{
+    font-size: 1.2vw;
+    text-align: center;
+  }
+  li{
+    min-width: 90%;
+    margin-left:0;
+  }
+}
+
+/* iPad Pro and desktop*/
+@media only screen
+and (min-device-width : 1365px)
+and (orientation : landscape) {
+  .ui{
+    font-size: 1.5vw;
+    justify-content: center;
+    align-items: center;
+    width: 23vw;
+    min-width: 23vw;
+  }
+  
+  img{
+    width:100%;
+  }
+  #foursquarelogo{
+    width:45%;
+  }
+  
+  #form{
+    width: 22vw ;
+    max-width: 22vw;
+  }
+  
+  button, select{
+    font-size: 1vw;
+    padding: 2px;
+    width: 20vw ;
+    max-width: 20vw;
+    margin:10px;
+    max-height: 2.75vw;
+  }
+  
+  #filterheader{
+    font-size: 1.25vw;
+  }
+  
+  option{
+    font-size: 1vw;
+  }
+
+  a{
+    font-size: 1.2vw;
+    text-align: center;
+  }
+  li{
+    font-size: 1vw;
+    min-width: 90%;
+    margin-left:0;
+  }
+  figCaption, #menu, #website{
+    font-size: 1vw;
+  }
+  
+  .gm-style .gm-style-iw {
+    width: 25vw;
+    max-width: 25vw;
+    font-size:1vw;
+}
+
+.gm-style .gm-style-iw img {
+    width: 10vw;
+    max-width: 10vw;
+  }
+}
