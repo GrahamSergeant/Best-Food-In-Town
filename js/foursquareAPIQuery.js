@@ -15,7 +15,7 @@ function FfoursquareRestaurantQuery(query){
               resolve(jsonResult.response.venue);
           });
         }).catch(function(error) {
-            alert('FourSquare venue/details serarch failed with error: ' + error);
+            alert('FourSquare venue/details search failed with error: ' + error);
           });
         });
     })
