@@ -5,21 +5,28 @@
     <link rel="stylesheet" type="text/css" href="css/style.css">
   </head>
 <body>
-  <div class="container">
-    <img src="img/bfit_splash.png" id="splash" data-bind="visible: showSplash">
-    <form id="ui">
+  <div class="ui">
+    <img id="4squarelogo" src = "img/powered-by-foursquare-grey.png">
+    <br>
+    <form id="form">
+      <label for="form">Select Venue For Details</label>
       <ol id="list" data-bind="foreach: placeList">
-        <li data-bind = "click: $parent.selected"><span data-bind="text: $data.name"></span><span>,   </span><span data-bind="text: $data.rating"></span><span>/10</span></li>
+        <li data-bind = "click: $parent.selected"><span data-bind="text: $data.name"></span></li>
       </ol>
       <button type="button" data-bind="click: sortListByRating" >Order List By Rating</button>
       <select data-bind="options: categoryList, selectedOptions: selectedCategory">
       </select>
     </form>
+    <br>
     <div id="menu" data-bind="html: menuURL"></div>
+    <div id="website" data-bind="html: websiteURL"></div>
     <div id="price" data-bind="text: venuePrice"></div>
-    <div id="photobox" data-bind="html: photoURL"></div>
-    <div id="map"></div>
+    <figure id="photobox">
+      <div data-bind="html: photoURL, attr:{title:imageAttribution}"></div>
+    <figCaption data-bind="html: selectedRestaurant" ></figCaption>
+  </figure>
   </div>
+  <div id="map"></div>
     <script type="text/javascript" src="lib/knockout.js"> </script>
     <script type='text/javascript' src='js/config.js'></script>
     <script type="text/javascript" src="js/app.js"> </script>

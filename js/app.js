@@ -3,21 +3,20 @@ const CLIENT_ID = config.CLIENT_ID;
 const CLIENT_SECRET = config.CLIENT_SECRET;
 //ko bound viewmodel - called in init() function
 let ViewModel = function() {
-  //coerce value of this
   let self = this;
-  //set ko bound splash logo to visible
-  this.showSplash = ko.observable (true);
   //declare restaurant array, ko bound to restaurant list element in html
   this.placeList = ko.observableArray ([]);
   //declare restaurant array, ko bound to restaurant list element in html
   this.categoryList = ko.observableArray (['All']);
-  //when category is selected - check which venues are included in the categories array[object] and filter placeList ko array
+  //update data elements for selected venue
   this.selectedCategory = ko.observable();
-  //update data elements for selected venue:
-  this.photoURL = ko.observable();
+  this.selectedRestaurant = ko.observable();
   this.menuURL = ko.observable();
+  this.websiteURL = ko.observable();
   this.venuePrice = ko.observable();
-  //data collection - pushed out to various map api calls and updated on return
+  this.photoURL = ko.observable('<img src="img/bfit_splash.png">');
+  this.imageAttribution = ko.observable();
+  //data collection - pushed out to various api and function calls and updated on return
   let map;
   let markers = [];
   let categories = [];
@@ -87,53 +86,65 @@ let ViewModel = function() {
             markers.push(addPlaceMarker(place, map, false));
       });
     }
-    self.selected('clearSelection')
+    self.selected('clearSelection');
   });
-  //sort by foursquare place rating(high to low) both ko bound places array and master places array from api calls
+  //sort ko bound places array by foursquare place rating(high to low)
   this.sortListByRating = function(){
     let sortedList = sortList(self.placeList());
     self.placeList.removeAll();
-    apiResponsePlacesArray = [];
     sortedList.forEach(function(place){
       self.placeList.push(place);
-      apiResponsePlacesArray.push(place);
     });
   };
   //actions to perform with API data when restaurant is selected from list
   this.selected = function(selectedRestaurant) {
+      self.selectedRestaurant('<p>' + selectedRestaurant.name + ' Rating: '+selectedRestaurant.rating + '</p>');
       apiResponsePlacesArray.forEach(function(place){
         if (place.name === selectedRestaurant.name){
-          console.log(place);
-          //Photo
-          if (place.photos){
-            let photoPrefix = place.photos.groups[1].items[0].prefix
-            let photoSuffix = place.photos.groups[1].items[0].suffix
-            let photoURL = photoPrefix + '200x200' + photoSuffix;
-            console.log(photoURL);
-            self.photoURL('<img src="' + photoURL + '">');
-          }
+          //centre map on selected
+          map.panTo({lat:place.location.lat,lng:place.location.lng,});
+          map.panBy(-200,-150);//pan slightly south-east to give room for infowindow/sidebar
           //Menu
           if (place.menu){
-            self.menuURL("<a href=" + place.menu.url + ">Click to see menu on Foursquare</a>");
-          } else self.menuURL("<p>menu not available</p>");
+            self.menuURL('<a href=' + place.menu.url + '>Menu</a>' + '<br><br>');
+          } else {self.menuURL('');}
+          //website
+          if (place.url){
+            self.websiteURL('<a href=' + place.url + '>' + place.url + '</a>' + '<br><br>');
+          } else {self.websiteURL('');}
           //Price
           if(place.price){
-            self.venuePrice('Price Guide: ' + place.price.message)
+            self.venuePrice('Price Guide: ' + place.price.message);
+          }else {self.venuePrice('');}
+          //Photo
+          if (place.photos){
+            let photoPrefix = place.photos.groups[1].items[0].prefix;
+            let photoSuffix = place.photos.groups[1].items[0].suffix;
+            let photoURL = photoPrefix + '300x300' + photoSuffix;
+            self.photoURL('<img src="' + photoURL + '">');
+            //image attribution
+            
+            self.imageAttribution('Photo Credit: ' + place.photos.groups[1].items[0].user.firstName + ' ' + place.photos.groups[1].items[0].user.lastName +", " +  new Date(place.photos.groups[1].items[0].createdAt * 1000).getFullYear());
           }
         }
       });
       //Marker
       markers.find(function(marker){
         if(marker.title === selectedRestaurant.name){
-          //single timed bounce of marker
+          //bounce on - bounce off
           markerBounceToggle(marker);
-          setTimeout(markerBounceToggle(marker),2000);
+          setTimeout(function(){
+            markerBounceToggle(marker);
+          },2000);
         }
       });
+      //clean elements on no selection event
       if (selectedRestaurant === 'clearSelection'){
-        self.photoURL('<div></div>');
-        self.menuURL('<div></div>');
-        self.venuePrice('<div></div>');
+        self.photoURL('<img src="img/bfit_splash.png">');
+        self.menuURL('');
+        self.venuePrice('');
+        self.website('');
+        self.selectedRestaurant('<p></p>');
       }
   };
   //initial map set up - called once
@@ -147,8 +158,6 @@ let ViewModel = function() {
   }
   //initialise map
   mapInit();
-  //remove splash screen
-  setTimeout(function(){self.showSplash(false);},1500);
 };
 
 //google map API callback/loaded in html file
@@ -210,84 +219,6 @@ function foursquareRestaurantQuery(query){
   });
 }
 
-function addPlaceMarker(venue, map, category){
-  let lat = venue.location.lat;
-  let lng = venue.location.lng;
-  let location = {lat,lng};
-  let icon = 'img/bfit_map_pin.png';
-  if(category){
-    if (venue.categories[0].icon){
-      let iconPrefix = venue.categories[0].icon.prefix;
-      let iconSuffix = venue.categories[0].icon.suffix;
-      icon = iconPrefix + '64' + iconSuffix; //use bg_ for grey background eg 'bg_32'
-    }
-  }
-  let marker = new google.maps.Marker({
-      map: map,
-      icon: icon,
-      title: venue.name,
-      animation: google.maps.Animation.DROP,
-      position: location,
-    });
-  let placeInfoWindow = new google.maps.InfoWindow();
-  marker.addListener('click', function() {
-    if (placeInfoWindow.marker != this) {
-          markerBounceToggle(this);
-          setTimeout(markerBounceToggle(marker),2000);
-          openInfoWindow(this, placeInfoWindow, venue, map);
-    }
-  });
-  return (marker);
-}
-
-function openInfoWindow(marker, infowindow, venue, map) {
-    infowindow.marker = marker;
-    let innerHTML = '<div id=' + 'infowindow_container' + '>' + '<div id=' + 'infowindow' + '>';
-    if (venue.name){
-      innerHTML += '<strong>' + venue.name + '</strong>';
-    }
-    if (venue.location.formattedAddress){
-      innerHTML += '<br>' + venue.location.formattedAddress;
-    }
-    if (venue.contact.formattedPhone){
-    innerHTML += '<br>' + venue.contact.formattedPhone;
-    }
-    if (venue.rating){
-      innerHTML += '<br>' + '<strong>Average Rating: </strong>' + venue.rating;
-    }
-    if (venue.tips.groups[0].items[0].user && venue.tips.groups[0].items[0].text) {
-      innerHTML += '<br>' + '<strong>' + venue.tips.groups[0].items[0].user.firstName + ' ' + venue.tips.groups[0].items[0].user.lastName + '\'s tip: ' + '</strong>' + ' ' + venue.tips.groups[0].items[0].text;
-    }
-    if (venue.tips.groups[0].items[0].photo) {
-      let photoPrefix = venue.tips.groups[0].items[0].photo.prefix
-      let photoSuffix = venue.tips.groups[0].items[0].photo.suffix
-      let photoURL = photoPrefix + '100x100' + photoSuffix;
-        innerHTML += '<br><br><img src="' + photoURL + '">';
-      }
-    innerHTML += '</div>' + '</div>';
-    infowindow.setContent(innerHTML);
-    infowindow.open(map, marker);
-    // Make sure the marker property is cleared if the infowindow is closed.
-    infowindow.addListener('closeclick', function() {
-      infowindow.marker = null;
-    });
-}
-
-
-function markerBounceToggle(marker){
-  if (marker.getAnimation()) {
-    marker.setAnimation(null);
-  } else {
-      marker.setAnimation(google.maps.Animation.BOUNCE);
-    }
-}
-
-function clearMarkers(markers){
-  for (let i = 0; i < markers.length; i++) {
-    markers[i].setMap(null);
-  }
-}
-
 //expects an array of arrays for the list argument
 function sortList(list){
   //add first result into sorted array to compare against
@@ -307,4 +238,93 @@ function sortList(list){
     }
   }
   return(sortedList);
+}
+
+//marker and infowindow manipulation functions below
+function addPlaceMarker(venue, map, category){
+  let lat = venue.location.lat;
+  let lng = venue.location.lng;
+  let location = {lat,lng};
+  let icon = 'img/bfit_map_pin.png';
+  if(category){
+    if (venue.categories[0].icon){
+      map.panTo(location);
+      map.panBy(-200,-150);//pan slightly south-east to give room for infowindow/sidebar
+      let iconPrefix = venue.categories[0].icon.prefix;
+      let iconSuffix = venue.categories[0].icon.suffix;
+      icon = iconPrefix + '64' + iconSuffix; //use bg_ for grey background eg 'bg_32'
+    }
+  }
+  let marker = new google.maps.Marker({
+      map: map,
+      icon: icon,
+      title: venue.name,
+      animation: google.maps.Animation.DROP,
+      position: location,
+    });
+  let placeInfoWindow = new google.maps.InfoWindow({maxWidth: 230});
+  maxWidth: 200
+  marker.addListener('click', function() {
+    if (placeInfoWindow.marker != this) {
+          markerBounceToggle(this);
+          setTimeout(function(){
+            markerBounceToggle(marker)
+          },2000);
+          map.panTo(marker.position);
+          map.panBy(-200,-150); //pan slightly south-east to give room for infowindow/sidebar
+          openInfoWindow(this, placeInfoWindow, venue, map);
+    }
+  });
+  return (marker);
+}
+
+function openInfoWindow(marker, infowindow, venue, map) {
+    //infowindow html string construction from api data
+    infowindow.marker = marker;
+    let innerHTML = '<div id=' + 'infowindow_container' + '>' + '<div id=' + 'infowindow' + '>';
+    if (venue.name){
+      innerHTML += '<strong>' + venue.name + '</strong>';
+    }
+    if (venue.location.formattedAddress){
+      innerHTML += '<br>' + venue.location.formattedAddress;
+    }
+    if (venue.contact.formattedPhone){
+    innerHTML += '<br>' + venue.contact.formattedPhone;
+    }
+    if (venue.rating){
+      innerHTML += '<br>' + '<strong>Average Rating: </strong>' + venue.rating;
+    }
+    if (venue.tips.groups[0].items[0].user && venue.tips.groups[0].items[0].text) {
+      innerHTML += '<br>' + '<strong>' + venue.tips.groups[0].items[0].user.firstName + ' ' + venue.tips.groups[0].items[0].user.lastName + '\'s tip: ' + '</strong>' + '\"' + venue.tips.groups[0].items[0].text + ' \"';
+    }
+    if (venue.tips.groups[0].items[0].photo) {
+      let photoPrefix = venue.tips.groups[0].items[0].photo.prefix
+      let photoSuffix = venue.tips.groups[0].items[0].photo.suffix
+      let photoURL = photoPrefix + '300x300' + photoSuffix;
+      //tooltip image attribution with year
+        innerHTML += '<br><br><img src="' + photoURL + '" title="' + 'Photo Credit: ' + venue.tips.groups[0].items[0].user.firstName + ' ' + venue.tips.groups[0].items[0].user.lastName + ', ' + new Date(venue.tips.groups[0].items[0].photo.createdAt * 1000).getFullYear() + '">';
+      }
+    innerHTML += '</div>' + '</div>';
+    //infowindow options
+    infowindow.setContent(innerHTML);
+    infowindow.setZIndex(5);
+    infowindow.open(map, marker);
+    // Make sure the marker property is cleared if the infowindow is closed.
+    infowindow.addListener('closeclick', function() {
+      infowindow.marker = null;
+    });
+}
+
+function markerBounceToggle(marker){
+  if (marker.getAnimation()) {
+    marker.setAnimation(null);
+  } else {
+      marker.setAnimation(google.maps.Animation.BOUNCE);
+    }
+}
+
+function clearMarkers(markers){
+  for (let i = 0; i < markers.length; i++) {
+    markers[i].setMap(null);
+  }
 }

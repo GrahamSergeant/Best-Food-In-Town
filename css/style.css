@@ -1,107 +1,86 @@
 html, body {
-  overflow: hidden;
   font-family: 'Lustria', serif;
-  font-size: 22px;
-  height: 100vh;
-  width: 100vw;
-  margin: 0;
-  padding: 0;
+  font-size: 18px;
+  height:100%;
+  margin:0;
+  overflow:hidden;
 }
 
-.container{
-  bottom: 0px;
-}
-
-#splash{
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 840px;
-  height: 840px;
-  margin-top: -420px;
-  margin-left: -420px;
-  z-index: 2;
+label{
+  font-weight: bold;
+  font-size: 14px;
+  margin:0;
 }
 
 #map{
+  position:absolute;
   bottom: 0px;
-  left: 0px;
-  right: 0px;
-  height: 100vh;
-  z-index: 0;
-}
-
-#ui{
-  height: 20vh;
-  background-color: black;
-  top: 0px;
+  height: 100%;
+  width: 100%;
   z-index: 1;
 }
 
 
-#infowindow{
-  z-index: 4;
+.ui{
+  position:relative;
+  display:flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  flex-basis: auto;
+  flex-grow: 1;
+  align-items: centre;
+  min-width: 16vw;
+  overflow: hidden;
+  width: 22vw;
+  height:100vh;
+  z-index: 3;
+  color: white;
+  background:radial-gradient(circle, rgba(0,0,0,0.2),rgba(0,0,0,0.4),rgba(0,0,0,0.8));
+  padding:20px;
+  
 }
 
-input,label,ol{
-  position: relative;
-  left: 40%;
-  z-index: 2;
-  font-weight: bold;
+img{
+  width:16vw;
 }
 
-ol{
-  height: 100%;
-  width: 100%;
+#list{
+  cursor: pointer;
   overflow-y: scroll;
-  width: 30%;
-  margin: 0;
-  padding: 0;
+  margin:5px;
 }
 
-li{
-  width: 300px;
-  font-size: 16px;
+#price, #menu{
+  margin: 4px;
 }
 
-input{
-  text-align: center;
-  width: 50px;
-}
-
-label,li{
-  color: white;
-}
-
-button{
-  z-index: 3;
-  position: absolute;
-}
-
-select{
-  z-index: 3;
-  left: 40%;
-  position: absolute;
-}
-
-#menu,a{
-  font-size: 11px;
-  color: white;
-  z-index: 3;
-  left: 80%;
-  position: absolute;
-}
-
-#price{
-  font-size: 11px;
-  color: white;
-  z-index: 3;
-  left: 90%;
-  position: absolute;
+#website{
+  font-size: 14px;
+  margin:5px;
 }
 
 #photobox{
-  z-index: 3;
-  left: 20%;
-  position: absolute;
+  margin:6px;
+  color: white;
+  text-align: left;
+  font-size: 20px;
+  font-weight: bold;
 }
+
+a{
+  color: white;
+}
+
+.gm-style .gm-style-iw {
+  font-family: 'Lustria', serif;
+  font-size: 14px;
+  text-align: center;
+}
+
+.gm-style .gm-style-iw img {
+  margin:0;
+  width:90%;
+}
+     
+         
+              
