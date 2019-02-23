@@ -19,3 +19,6 @@ Submitted for the Udacity Front End Web Developer Nanodegree final project 2019
   - the Google Maps API for location, marker and map display services:  (https://developers.google.com/maps/documentation/)
   - Foursquare's Places API for information about the best food establishments in Birmingham: (https://developer.foursquare.com/places-api)
   - Google Fonts, Cinzel & Roboto: (https://fonts.google.com/)
+
+  ## API keys
+    - email me at (grahamsergeant4@gmail.com) and request api config file for access
