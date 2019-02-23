@@ -1,7 +1,7 @@
 //due to stringent daily rate limits, this project has a spoof api function to pull EXACTLY the same data from a JSON URI link -- to use the correct function remove the extra F from the function below and add it to the function declaration below it
 
 //GENUINE API call to Foursquare's servers - query argument is restaurant name
-function FfoursquareRestaurantQuery(query){
+function foursquareRestaurantQuery(query){
   return new Promise(function(resolve,reject){
     //initial, shallow foursquare place search to get venue id from supplied name and birmingham lat/lng area query
     fetch(`https://api.foursquare.com/v2/venues/explore?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&v=20180323&ll=52.4813098,-1.9156044&query=${query}`)
@@ -26,8 +26,8 @@ function FfoursquareRestaurantQuery(query){
 }
 
 
-//SPOOF API call with prepared json data from URI
-function foursquareRestaurantQuery(query){
+//SPOOF API call with prepared JSON data from URI
+function FfoursquareRestaurantQuery(query){
   let uri;
   if(query === 'Digbeth Dining Club'){
     uri = 'https://api.myjson.com/bins/yckbu';
