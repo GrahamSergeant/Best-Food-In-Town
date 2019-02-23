@@ -15,7 +15,8 @@ html, body {
 }
 
 .ui{
-  background: rgb(0,0,0,0.5);
+  background: rgb(0,0,0);
+  background: rgba(0, 0, 0, 0.5);
   position: relative;
   width: 33vw;
   min-width: 33vw;
@@ -165,11 +166,11 @@ and (orientation : landscape) {
     justify-content: center;
     align-items: center;
   }
-  
+
   img{
     width: 35%;
   }
-  
+
   button, select{
     font-size: 1.3vw;
     padding: 2px;
@@ -178,7 +179,7 @@ and (orientation : landscape) {
     margin: 2px;
     max-height: 2.75vw;
   }
-  
+
   option{
     font-size: 1.5vw;
   }
@@ -204,19 +205,19 @@ and (orientation : landscape) {
     width: 23vw;
     min-width: 23vw;
   }
-  
+
   img{
     width: 100%;
   }
   #foursquarelogo{
     width: 45%;
   }
-  
+
   #form{
     width: 22vw ;
     max-width: 22vw;
   }
-  
+
   button, select{
     font-size: 1vw;
     padding: 2px;
@@ -225,11 +226,11 @@ and (orientation : landscape) {
     margin: 10px;
     max-height: 2.75vw;
   }
-  
+
   #filterheader{
     font-size: 1.25vw;
   }
-  
+
   option{
     font-size: 1vw;
   }
@@ -246,7 +247,7 @@ and (orientation : landscape) {
   figCaption, #menu, #website{
     font-size: 1vw;
   }
-  
+
   .gm-style .gm-style-iw {
     width: 25vw;
     max-width: 25vw;
